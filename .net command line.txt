@@ -1,0 +1,19 @@
+.net command line
+
+Khởi tạo một giải pháp (.sln):
+	dotnet new sln -n MySolution
+
+Tạo một dự án mới:
+	dotnet new <project_type> -n <name_project>
+
+Thêm dự án vào giải pháp:
+	dotnet sln add MyApp/MyApp.csproj
+
+Thêm nhiều dự án vào sln
+	dotnet sln add **/*.csproj
+
+Trong Windows, nếu bạn đang làm việc với .NET (dotnet CLI) và muốn thêm tất cả các project (.csproj) vào một solution (.sln), bạn có thể làm như sau:
+	for /r %i in (*.csproj) do dotnet sln add "%i"
+		📌 Giải thích:
+			for /r %i in (*.csproj) do ... → Lặp qua tất cả các file .csproj trong thư mục hiện tại và thư mục con.
+			dotnet sln add "%i" → Thêm từng project vào solution (.sln).
