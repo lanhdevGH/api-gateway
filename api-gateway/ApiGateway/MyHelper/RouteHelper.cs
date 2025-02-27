@@ -10,7 +10,7 @@ namespace ApiGateway.MyHelper
             return $"{route.TargetService}{targetPath}{context.Request.QueryString}";
         }
 
-        public static async Task<HttpRequestMessage> CreateRequestMessage(HttpContext context, string targetUrl)
+        public static HttpRequestMessage CreateRequestMessage(HttpContext context, string targetUrl)
         {
             var requestMessage = new HttpRequestMessage
             {
@@ -19,7 +19,7 @@ namespace ApiGateway.MyHelper
             };
 
             CopyRequestHeaders(context, requestMessage);
-            await CopyRequestBody(context, requestMessage);
+            CopyRequestBody(context, requestMessage);
 
             return requestMessage;
         }
@@ -35,13 +35,12 @@ namespace ApiGateway.MyHelper
             }
         }
 
-        public static async Task CopyRequestBody(HttpContext context, HttpRequestMessage requestMessage)
+        public static void CopyRequestBody(HttpContext context, HttpRequestMessage requestMessage)
         {
             if (context.Request.ContentLength > 0)
             {
                 var streamContent = new StreamContent(context.Request.Body);
                 requestMessage.Content = streamContent;
-                await Task.CompletedTask; // Added await to avoid CS1998 warning
             }
         }
 
@@ -52,7 +51,7 @@ namespace ApiGateway.MyHelper
             return await httpClient.SendAsync(requestMessage);
         }
 
-        public static async Task ProcessResponse(HttpContext context, HttpResponseMessage response)
+        public static async Task CopyResponseToContextAsync(HttpContext context, HttpResponseMessage response)
         {
             CopyResponseHeaders(context, response);
             context.Response.StatusCode = (int)response.StatusCode;
@@ -65,6 +64,15 @@ namespace ApiGateway.MyHelper
             {
                 context.Response.Headers[header.Key] = header.Value.ToArray();
             }
+
+            // Không quên sao chép Content-* headers
+            if (response.Content?.Headers != null)
+            {
+                foreach (var header in response.Content.Headers)
+                {
+                    context.Response.Headers[header.Key] = header.Value.ToArray();
+                }
+            }
         }
 
         public static async Task CopyResponseBody(HttpContext context, HttpResponseMessage response)
@@ -72,18 +80,8 @@ namespace ApiGateway.MyHelper
             if (response.Content != null)
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();
-                await responseStream.CopyToAsync(context.Response.Body);
+                responseStream.CopyToAsync(context.Response.Body).Wait();
             }
-        }
-
-        public static async Task HandleError(HttpContext context, ILogger logger, Exception ex)
-        {
-            logger.LogError(ex, "Lỗi khi xử lý yêu cầu thông qua API Gateway");
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            context.Response.ContentType = "application/json";
-
-            var error = new { message = "Lỗi khi xử lý yêu cầu API Gateway", error = ex.Message };
-            await context.Response.WriteAsJsonAsync(error);
         }
     }
 }

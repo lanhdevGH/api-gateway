@@ -1,5 +1,6 @@
 ﻿using ApiGateway.Application.DTOs.Routes;
 using ApiGateway.MyHelper;
+using System.Net.Http;
 
 namespace ApiGateway.MyHandles
 {
@@ -12,9 +13,11 @@ namespace ApiGateway.MyHandles
                 var targetUrl = RouteHelper.BuildTargetUrl(context, route);
                 logger.LogInformation($"Chuyển hướng yêu cầu từ {context.Request.Path} đến {targetUrl}");
 
-                var requestMessage = await RouteHelper.CreateRequestMessage(context, targetUrl);
-                var response = await RouteHelper.SendRequest(httpClientFactory, requestMessage);
-                await RouteHelper.ProcessResponse(context, response);
+                var httpClient = httpClientFactory.CreateClient();
+                var requestMessage = RouteHelper.CreateRequestMessage(context, targetUrl);
+
+                var response = await httpClient.SendAsync(requestMessage);
+                await RouteHelper.CopyResponseToContextAsync(context, response);
             }
             catch (Exception ex)
             {
