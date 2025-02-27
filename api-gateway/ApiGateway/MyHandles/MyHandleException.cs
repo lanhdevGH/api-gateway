@@ -58,10 +58,10 @@
                 status = statusCode,
                 message = "Đã xảy ra lỗi khi xử lý yêu cầu của bạn.",
                 detail = exception.Message,
-                stackTrace = exception.StackTrace,
-                innerException = exception.InnerException?.Message,
-                exceptionType = exception.GetType().Name,
-                traceId = Guid.NewGuid().ToString()
+                //stackTrace = exception.StackTrace,
+                //innerException = exception.InnerException?.Message,
+                //exceptionType = exception.GetType().Name,
+                //traceId = Guid.NewGuid().ToString()
             };
         }
     }
